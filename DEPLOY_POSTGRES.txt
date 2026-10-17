@@ -1,0 +1,40 @@
+TAC PROTOCOL — PostgreSQL deploy checklist
+==========================================
+
+Your old logs (EACCES /var/data, data.json) mean the OLD db.js is still running
+OR DATABASE_URL is not visible to the Web Service.
+
+1) GitHub — overwrite these files (paths must match YOUR repo):
+
+   Option A (this ZIP default):
+     server/db.js
+     server/index.js
+     package.json
+
+   Option B (if your repo uses src/server/):
+     src/server/db.js
+     src/server/index.js
+     package.json
+     And set Start Command: node src/server/index.js
+
+2) package.json must contain:
+   "pg": "^8.13.1"
+   "start": "node server/index.js"   (or start:src)
+
+3) Render WEB service → Environment:
+   DATABASE_URL = (from Postgres → Connections → Internal URL)
+   IMPORTANT: Add it on the WEB service, not only on the database service.
+
+4) Remove or ignore DATA_PATH=/var/data (not needed with Postgres).
+
+5) Manual Deploy → open Logs. You MUST see:
+   [db] TAC-PG-v2 starting…
+   [db] DATABASE_URL SET (length=…)
+   [db] PostgreSQL connection OK
+   [db] SUCCESS backend=PostgreSQL
+
+   If you still see "not writable: /var/data" → the new db.js is NOT deployed
+   (wrong folder path on GitHub).
+
+6) Verify: GET https://YOUR-APP.onrender.com/api/config-status
+   db_mode should be "postgres"
